@@ -49,7 +49,7 @@ classdef MPC_Control_yaw < MPC_Control
       sysMPT.u.penalty=QuadFunction(R);
       Xf=sysMPT.LQRSet;
       P=sysMPT.LQRPenalty.weight;
-      %K=sysMPT.LQRGain;
+      
 
       Ft=Xf.A;
       ft=Xf.b;
