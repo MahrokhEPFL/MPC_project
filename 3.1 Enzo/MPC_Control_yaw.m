@@ -65,7 +65,7 @@ classdef MPC_Control_yaw < MPC_Control
         obj=obj+x(:,i)'*Q*x(:,i)+u(:,i)'*R*u(:,i); % cost function
       end
       con=con+(Ft*x(:,N)<=ft); % terminal constraint
-      obj=obj+x(:,N)'*P*x(:,N); % terminal costt
+      obj=obj+x(:,N)'*P*x(:,N); % terminal cost
 
             
       % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE 
