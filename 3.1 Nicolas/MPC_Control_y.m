@@ -30,13 +30,13 @@ classdef MPC_Control_y < MPC_Control
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE 
 
-      Q=diag([10 15 10 15]);
+      Q=diag([5 15 5 15]);
       R=1;
       
       Sys=LTISystem('A',mpc.A,'B',mpc.B);
 
       alpha_lim=deg2rad(2);
-      Sys.x.min=[-Inf;-alpha_lim;-Inf;-Inf];  %-2°<=x2<=2°
+      Sys.x.min=[-Inf;-alpha_lim;-Inf;-Inf];  %-2Â°<=x2<=2Â°
       Sys.x.max=[Inf;alpha_lim;Inf;Inf];    
 
       Sys.u.min=-0.3; %-0.3<=M_alpha<=0.3
@@ -55,7 +55,7 @@ classdef MPC_Control_y < MPC_Control
       ma=[0.3 0.3]'; %U={u|Ma*u<=ma}
      
       F=[0 1 0 0; 0 -1 0 0];
-      f=[alpha_lim alpha_lim]';         % -2°<=alpha<=2°
+      f=[alpha_lim alpha_lim]';         % -2Â°<=alpha<=2Â°
       
       
       
