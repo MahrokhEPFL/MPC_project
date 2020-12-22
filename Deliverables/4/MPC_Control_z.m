@@ -54,41 +54,30 @@ classdef MPC_Control_z < MPC_Control
         minu = -0.2;
         Mu = [ones(m,1); -1.*ones(m,1)];
         mu = [maxu; abs(minu)];
-        % state cons:
-        %{
-        max_height = 10;                          % ADJUST
-        max_abs_speed = 2;                        % ADJUST
-        maxx = [max_abs_speed; max_height];
-        minx = [-max_abs_speed; -max_height];
-        Mx = [eye(n); -1.*eye(n)];
-        mx = [maxx; abs(minx)];
-        %}
+        
         % costs
-        Q = [10 0 ; 0 20];
+        Q = 10 .* diag([1 2]);
         R = 1;
         % terminal cost and constraint
         sys = LTISystem('A', mpc.A, 'B', mpc.B);
-        %sys.x.min = minx; sys.x.max = maxx;
         sys.u.min = minu; sys.u.max = maxu;
         sys.x.penalty = QuadFunction(Q); sys.u.penalty = QuadFunction(R);
         Mx_f = sys.LQRSet.A;
         mx_f = sys.LQRSet.b;
         Q_f = sys.LQRPenalty.weight;
-
+        
         % form constraints and objective 
         con = (x(:,2) == mpc.A*x(:,1) + mpc.B*u(:,1)) + (Mu*u(:,1) <= mu);
-        obj = u(:,1)'*R*u(:,1);
+        obj = (u(:,1)-us)'*R*(u(:,1)-us);
         % stage 
         for i = 2:N-1
         con = con + (x(:,i+1) == mpc.A*x(:,i) + mpc.B*u(:,i));
         con = con + (Mu*u(:,i) <= mu);
-        % con = con + con + (Mx*x(:,i) <= mx);
-        obj = obj + x(:,i)'*Q*x(:,i) + u(:,i)'*R*u(:,i);
+        obj = obj + (x(:,i)-xs)'*Q*(x(:,i)-xs) + (u(:,i)-us)'*R*(u(:,i)-us);
         end
         % final
-        con = con + (Mx_f*x(:,N) <= mx_f);
-        obj = obj + x(:,N)'*Q_f*x(:,N);
-
+        con = con + (Mx_f*(x(:,N)-xs) <= mx_f);
+        obj = obj + (x(:,N)-xs)'*Q_f*(x(:,N)-xs);
 
         % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -126,8 +115,21 @@ classdef MPC_Control_z < MPC_Control
         % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE 
         % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
         % Set up the MPC cost and constraints using the computed set-point
-        con = [];
-        obj = 0;
+        % input cons: -0.2 <= F <= 0.3
+        maxu = 0.3;
+        minu = -0.2;
+        Mu = [1; -1];
+        mu = [maxu; abs(minu)];
+        
+        % constraints
+        con = (Mu*us <= mu);      % feasibility constraint
+        con = con + ((eye(size(mpc.A))-mpc.A)*xs - mpc.B*us == zeros(size(mpc.B)));
+        con = con + (mpc.C*xs == ref);
+        
+        % objective
+        Rs = 1;
+        obj=us'*Rs*us;
+        
         % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
