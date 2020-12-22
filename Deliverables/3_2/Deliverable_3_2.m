@@ -11,14 +11,14 @@ sys=quad.linearize(xs,us);
 [sys_x,sys_y,sys_z,sys_yaw]=quad.decompose(sys,xs,us);
 
 %% Design MPC controllers
-fprintf('\n\nTuning controllers...')
-fprintf('X direction:')
+fprintf('\n\nTuning controllers...\n')
+fprintf('X direction:\n')
 mpc_x = MPC_Control_x(sys_x, Ts);
-fprintf('Y direction:')
+fprintf('\nY direction:\n')
 mpc_y = MPC_Control_y(sys_y, Ts);
-fprintf('Z direction:')
+fprintf('\nZ direction:\n')
 mpc_z = MPC_Control_z(sys_z, Ts);
-fprintf('Yaw:\n')
+fprintf('\nYaw:\n')
 mpc_yaw = MPC_Control_yaw(sys_yaw, Ts);
 
 %% Solve problem
@@ -31,7 +31,7 @@ settling_time = zeros(4, 1);            % settling time of each subsystem
 
 % simulate for each subsystem
 for sys_num = 1:4
-    fprintf(strcat('\nSimulating subsystem ', '\t', subsystems(sys_num)))
+    fprintf(strcat('\n\nSimulating subsystem ', {' '}, subsystems(sys_num)));
     
     % select subsystem
     switch sys_num
@@ -44,7 +44,7 @@ for sys_num = 1:4
         case 4
             subsys = sys_yaw;
         otherwise
-            fprintf('[Error] subsystem number out of range.');
+            fprintf('\n[Error] subsystem number out of range.');
     end
     
     % set initial condition
@@ -63,7 +63,7 @@ for sys_num = 1:4
         case 4
             mpc_cont = mpc_yaw;
         otherwise
-            fprintf('[Error] subsystem number out of range.')
+            fprintf('\n[Error] subsystem number out of range.')
     end
     
     % simulate at each time step
@@ -81,7 +81,7 @@ for sys_num = 1:4
             i = i + 1;
             % Maximum iterations limit
             if(i>maxiter)
-                fprintf('Did not converge\n');
+                fprintf('\nDid not converge\n');
                 break
             end
         end
@@ -90,10 +90,11 @@ for sys_num = 1:4
     end
     
     % find settling time
-    settled = prod(abs(sol.x)<=0.05, 1);    % settled[i] = 1 iff all states are settled at index i
+    settled = prod(abs(sol.x - xs)<=0.05,1);% settled[i] = 1 iff all states are settled at index i
     settled = find(settled);                % indexes when all states are settled
     settling_time(sys_num)=Ts*(settled(1)-1);% settling time in seconds
-    fprintf(strcat('Settling time for this subsystem = ', num2str(settling_time(sys_num))));
+    msg = strcat("\nSettling time for this subsystem = ", {' '}, num2str(settling_time(sys_num)), "s.");
+    fprintf(msg);
     
     % save results
     switch sys_num
@@ -111,13 +112,14 @@ for sys_num = 1:4
     clear sol
 end
 
-fprintf(strcat("\nMaximum settling time of all subsystems = ", {' '}, num2str(max(settling_time))));
+fprintf(strcat("\n\nMaximum settling time of all subsystems = ", {' '}, num2str(max(settling_time)), "s.\n"));
 
 %% Plot
 % define input names
 input_names = ["$M_\alpha$", "$M_\beta$", "$F$", "$M_\gamma$"];
 sys_x.StateName(1) = {'vel_{pitch}'};
 sys_yaw.StateName(1) = {'vel_{yaw}'};
+% units?
 
 % produce two figures for each subsystem
 for sys_num = 1:4
@@ -138,6 +140,7 @@ for sys_num = 1:4
         otherwise
             fprintf('[Error] subsystem number out of range.');
     end
+    xs = [zeros(length(subsys.A)-1,1);ref(sys_num)];
     
     % get input bounds
     [umin, umax] = get_input_bounds(sys_num);
@@ -151,24 +154,26 @@ for sys_num = 1:4
     o = ones(1, num_sample);
     
     % produce figures for each state
-    figure
+    fig_title = strcat("States Evolution for Subsystem", {' '}, subsystems(sys_num));
+    figure('Name', fig_title,'NumberTitle','off');
     hold on; grid on;
     for fig_num = 1 : num_states
         subplot(num_states, 1, fig_num);
         hold on; grid on;
         plot(times, sol.x(fig_num, :),'-ok','markersize',5,'linewidth',2);
-        plot(times, -0.05*o,'c','linewidth',1)
-        plot(times, 0.05*o,'c','linewidth',1)
+        plot(times, xs(fig_num)-0.05*o,'c','linewidth',1)
+        plot(times, xs(fig_num)+0.05*o,'c','linewidth',1)
         xline(settling_time(sys_num), '-.r','linewidth',2) 
-        legend('state', '$-5\%$ final value', '$+5\%$ final value', 'settling time' ,'Interpreter','latex') 
+        legend('state', '$-0.05$ error bound', '$+0.05$ error bound', 'settling time' ,'Interpreter','latex') 
         ylabel(strcat("$", subsys.StateName(fig_num), "$") ,'Interpreter','latex');   
         xlabel('$t$ [s]','Interpreter','latex')
         hold off
     end
-    sgtitle(strcat("States Evolution for Subsystem", {' '}, subsystems(sys_num)));
+    sgtitle(fig_title);
     
     % figure for input
-    figure()
+    fig_title = strcat("Applied Inputs to Subsystem", {' '}, subsystems(sys_num));
+    figure('Name', fig_title,'NumberTitle','off');
     hold on; grid on;
     stairs(times(1:end-1), sol.u,'k','markersize',20,'linewidth',2);
     plot(times(1:end-1), umin*o(1:end-1),'c','linewidth',2);
@@ -178,7 +183,7 @@ for sys_num = 1:4
     ylim(1.1*[umin umax]);
     ylabel(input_names(fig_num), 'Interpreter','latex');
     legend('input', 'lower bound', 'upper bound', 'settling time', 'Interpreter','latex');
-    title(strcat("Applied Inputs to Subsystem", {' '}, subsystems(sys_num)), 'Interpreter','latex');
+    title(fig_title, 'Interpreter','latex');
 end
 
 %% Assistive functions
