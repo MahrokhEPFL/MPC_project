@@ -102,7 +102,7 @@ end
 green = [0.13, 0.54, 0.13];
 orange = [0.8500, 0.3250, 0.0980];
 
-beta_lim=deg2rad(2); % -2°<=beta<=2°
+beta_lim=deg2rad(2); % -2Â°<=beta<=2Â°
 
 settling_step=size(sol_x.states,2)-1;
 t=Ts*[0:settling_step]; %discrete times for which the system is simulated
@@ -149,11 +149,11 @@ set(gca,'fontsize',14)
 
 
 % Plot invariant set
-Q=diag([10 15 10 15]);
+Q=diag([5 15 5 15]);
 R=1;
       
 Sys=LTISystem('A',mpc_x.A,'B',mpc_x.B);
-Sys.x.min=[-Inf;-beta_lim;-Inf;-Inf];  %-2°<=x2<=2°
+Sys.x.min=[-Inf;-beta_lim;-Inf;-Inf];  %-2Â°<=x2<=2Â°
 Sys.x.max=[Inf;beta_lim;Inf;Inf];    
 Sys.u.min=-0.3; %-0.3<=M_beta<=0.3
 Sys.u.max=0.3;
@@ -211,7 +211,7 @@ end
 green = [0.13, 0.54, 0.13];
 orange = [0.8500, 0.3250, 0.0980];
 
-alpha_lim=deg2rad(2); % -2°<=alpha<=2°
+alpha_lim=deg2rad(2); % -2Â°<=alpha<=2Â°
 
 settling_step=size(sol_y.states,2)-1;
 t=Ts*[0:settling_step]; %discrete times for which the system is simulated
@@ -258,11 +258,11 @@ set(gca,'fontsize',14)
 
 
 % Plot invariant set
-Q=diag([10 15 10 15]);
+Q=diag([5 15 5 15]);
 R=1;
       
 Sys=LTISystem('A',mpc_y.A,'B',mpc_y.B);
-Sys.x.min=[-Inf;-alpha_lim;-Inf;-Inf];  %-2°<=x2<=2°
+Sys.x.min=[-Inf;-alpha_lim;-Inf;-Inf];  %-2Â°<=x2<=2Â°
 Sys.x.max=[Inf;alpha_lim;Inf;Inf];    
 Sys.u.min=-0.3; %-0.3<=M_alpha<=0.3
 Sys.u.max=0.3;
